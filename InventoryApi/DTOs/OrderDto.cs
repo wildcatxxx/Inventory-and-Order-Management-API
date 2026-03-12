@@ -1,14 +1,23 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace InventoryAPI.DTOs;
 
 public class CreateOrderDto
 {
+    [Range(1, int.MaxValue)]
     public int UserId { get; set; }
+
+    [Required]
+    [MinLength(1)]
     public List<OrderItemDto> Items { get; set; } = new();
 }
 
 public class OrderItemDto
 {
+    [Range(1, int.MaxValue)]
     public int ProductId { get; set; }
+
+    [Range(1, int.MaxValue)]
     public int Quantity { get; set; }
 }
 
@@ -36,5 +45,7 @@ public class OrderItemDetailsDto
 
 public class UpdateOrderStatusDto
 {
+    [Required]
+    [RegularExpression("^(Pending|Processing|Shipped|Delivered|Cancelled|Failed)$", ErrorMessage = "Status must be one of: Pending, Processing, Shipped, Delivered, Cancelled, Failed.")]
     public string Status { get; set; } = string.Empty;
 }

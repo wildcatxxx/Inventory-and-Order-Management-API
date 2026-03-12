@@ -9,15 +9,18 @@ public class OrderService : IOrderService
     private readonly IOrderRepository _orderRepository;
     private readonly IProductRepository _productRepository;
     private readonly IInventoryService _inventoryService;
+    private readonly ILogger<OrderService> _logger;
 
     public OrderService(
         IOrderRepository orderRepository,
         IProductRepository productRepository,
-        IInventoryService inventoryService)
+        IInventoryService inventoryService,
+        ILogger<OrderService> logger)
     {
         _orderRepository = orderRepository;
         _productRepository = productRepository;
         _inventoryService = inventoryService;
+        _logger = logger;
     }
 
     public async Task<OrderDto?> GetOrderByIdAsync(int id)
@@ -52,11 +55,16 @@ public class OrderService : IOrderService
 
     public async Task<OrderDto> CreateOrderAsync(CreateOrderDto dto)
     {
+        _logger.LogInformation("Creating order for userId {UserId} with {ItemCount} items", dto.UserId, dto.Items.Count);
+
         // Validate inventory for all items first
         foreach (var item in dto.Items)
         {
             if (!await _inventoryService.CheckInventoryAsync(item.ProductId, item.Quantity))
+            {
+                _logger.LogWarning("Order creation failed due to insufficient inventory for productId {ProductId}", item.ProductId);
                 throw new InvalidOperationException($"Insufficient inventory for product {item.ProductId}");
+            }
         }
 
         var order = new Order
@@ -74,7 +82,10 @@ public class OrderService : IOrderService
         {
             var product = await _productRepository.GetByIdAsync(item.ProductId);
             if (product == null)
+            {
+                _logger.LogWarning("Order creation failed because productId {ProductId} was not found", item.ProductId);
                 throw new InvalidOperationException($"Product {item.ProductId} not found");
+            }
 
             var orderItem = new OrderItem
             {
@@ -96,11 +107,15 @@ public class OrderService : IOrderService
         await _orderRepository.AddAsync(order);
         await _orderRepository.SaveChangesAsync();
 
+        _logger.LogInformation("Order {OrderId} created for userId {UserId} with total {TotalAmount}", order.Id, order.UserId, order.TotalAmount);
+
         return MapToDto(order);
     }
 
     public async Task<OrderDto> UpdateOrderStatusAsync(int id, UpdateOrderStatusDto dto)
     {
+        _logger.LogInformation("Updating order {OrderId} status to {Status}", id, dto.Status);
+
         var order = await _orderRepository.GetByIdAsync(id);
         if (order == null)
             throw new InvalidOperationException($"Order {id} not found");
@@ -117,6 +132,8 @@ public class OrderService : IOrderService
 
             await _orderRepository.UpdateAsync(order);
             await _orderRepository.SaveChangesAsync();
+
+            _logger.LogInformation("Order {OrderId} status updated to {Status}", order.Id, order.Status);
         }
         else
         {
@@ -128,6 +145,8 @@ public class OrderService : IOrderService
 
     public async Task CancelOrderAsync(int id)
     {
+        _logger.LogInformation("Cancelling order {OrderId}", id);
+
         var order = await _orderRepository.GetByIdAsync(id);
         if (order == null)
             throw new InvalidOperationException($"Order {id} not found");
@@ -146,6 +165,8 @@ public class OrderService : IOrderService
 
         await _orderRepository.UpdateAsync(order);
         await _orderRepository.SaveChangesAsync();
+
+        _logger.LogInformation("Order {OrderId} cancelled and inventory restored", order.Id);
     }
 
     private static OrderDto MapToDto(Order order)

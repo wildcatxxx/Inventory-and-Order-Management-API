@@ -33,11 +33,18 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto dto)
     {
-        var result = await _authService.LoginAsync(dto);
-        if (result == null)
-            return Unauthorized(new { message = "Invalid email or password" });
+        try
+        {
+            var result = await _authService.LoginAsync(dto);
+            if (result == null)
+                return Unauthorized(new { message = "Invalid email or password" });
 
-        return Ok(result);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [Authorize]

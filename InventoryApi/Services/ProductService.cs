@@ -7,10 +7,12 @@ namespace InventoryAPI.Services;
 public class ProductService : IProductService
 {
     private readonly IProductRepository _repository;
+    private readonly IInventoryRepository _inventoryRepository;
 
-    public ProductService(IProductRepository repository)
+    public ProductService(IProductRepository repository, IInventoryRepository inventoryRepository)
     {
         _repository = repository;
+        _inventoryRepository = inventoryRepository;
     }
 
     public async Task<ProductDto?> GetProductByIdAsync(int id)
@@ -55,7 +57,9 @@ public class ProductService : IProductService
             ReorderQuantity = 50,
             LastUpdated = DateTime.UtcNow
         };
-        
+
+        await _inventoryRepository.AddAsync(inventory);
+        await _inventoryRepository.SaveChangesAsync();
         return MapToDto(product);
     }
 

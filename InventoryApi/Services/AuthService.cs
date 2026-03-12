@@ -12,18 +12,25 @@ public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<AuthService> _logger;
 
-    public AuthService(IUserRepository userRepository, IConfiguration configuration)
+    public AuthService(IUserRepository userRepository, IConfiguration configuration, ILogger<AuthService> logger)
     {
         _userRepository = userRepository;
         _configuration = configuration;
+        _logger = logger;
     }
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
     {
+        _logger.LogInformation("Register attempt for email {Email}", dto.Email);
+
         var existingUser = await _userRepository.GetByEmailAsync(dto.Email);
         if (existingUser != null)
+        {
+            _logger.LogWarning("Register rejected because email already exists: {Email}", dto.Email);
             throw new InvalidOperationException("Email already registered");
+        }
 
         var user = new User
         {
@@ -38,6 +45,8 @@ public class AuthService : IAuthService
         await _userRepository.AddAsync(user);
         await _userRepository.SaveChangesAsync();
 
+        _logger.LogInformation("User registration succeeded for email {Email}, userId {UserId}", user.Email, user.Id);
+
         var token = GenerateJwtToken(user);
 
         return new AuthResponseDto
@@ -50,9 +59,16 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponseDto?> LoginAsync(LoginDto dto)
     {
+        _logger.LogInformation("Login attempt for email {Email}", dto.Email);
+
         var user = await _userRepository.GetByEmailAsync(dto.Email);
         if (user == null || !VerifyPassword(dto.Password, user.PasswordHash))
+        {
+            _logger.LogWarning("Login failed for email {Email}", dto.Email);
             return null;
+        }
+
+        _logger.LogInformation("Login succeeded for email {Email}, userId {UserId}", user.Email, user.Id);
 
         var token = GenerateJwtToken(user);
 

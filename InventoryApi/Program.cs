@@ -5,8 +5,16 @@ using System.Text;
 using InventoryAPI.Data;
 using InventoryAPI.Repositories;
 using InventoryAPI.Services;
+using InventoryAPI.Infrastructure;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+builder.Host.UseSerilog((context, loggerConfig) =>
+{
+    loggerConfig.ReadFrom.Configuration(context.Configuration);
+});
 
 // Configure database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -16,7 +24,7 @@ if (string.IsNullOrEmpty(connectionString))
 }
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseNpgsql(connectionString));
 
 // Configure JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"];
@@ -99,6 +107,10 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddControllers();
 
+// Add global exception handler
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
@@ -107,6 +119,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Register custom middleware
+app.UseSerilogHttpLogging();
+app.UseExceptionHandler();
 
 app.UseCors("AllowAll");
 
