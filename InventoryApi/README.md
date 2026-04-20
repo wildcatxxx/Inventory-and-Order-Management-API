@@ -275,7 +275,7 @@ Jwt__Audience=InventoryAPIUsers
 
 ## Security Considerations
 
-- Passwords are hashed using SHA256 (consider using bcrypt for production)
+- Passwords are hashed using SHA256 (considering bcrypt for production)
 - JWT tokens expire after 24 hours
 - All endpoints except `/products` (GET) and auth endpoints require JWT
 - CORS is open to all origins (configure in production)
@@ -293,7 +293,6 @@ Jwt__Audience=InventoryAPIUsers
 - [ ] Audit logging
 - [ ] Rate limiting
 - [ ] API versioning
-- [ ] GraphQL endpoint
 
 ## Dependencies
 
