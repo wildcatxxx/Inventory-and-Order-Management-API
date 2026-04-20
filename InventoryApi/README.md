@@ -34,7 +34,7 @@ A complete RESTful API for managing products, inventory, and orders with JWT aut
 
 ### Technical Features
 ✅ **Database**
-- Entity Framework Core with SQL Server
+- Entity Framework Core with PostgreSQL
 - Proper foreign key relationships
 - Cascade delete behavior
 - Precision decimal columns for pricing
@@ -189,16 +189,16 @@ Jwt__Audience=InventoryAPIUsers
 ```
 
 ### Appsettings Configuration
-- Default connection string points to SQL Server
+- Default connection string points to PostgreSQL
 - JWT authentication configured with 24-hour token expiration
 - CORS enabled for all origins (can be restricted in production)
-- SQL Server is the default database provider
+- PostgreSQL is the default database provider
 
 ## Getting Started
 
 ### Prerequisites
 - .NET 8.0 SDK
-- SQL Server (local or remote)
+- PostgreSQL (local or remote)
 - Visual Studio Code or Visual Studio
 
 ### Installation & Setup
