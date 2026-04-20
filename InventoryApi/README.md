@@ -1,7 +1,7 @@
 # Inventory & Order Management API
 
 ## Project Overview
-A complete RESTful API for managing products, inventory, and orders with JWT authentication, built with ASP.NET Core 8.0, Entity Framework Core, and SQL Server.
+A complete RESTful API for managing products, inventory, and orders with JWT authentication, built with ASP.NET Core 8.0, Entity Framework Core, and PostgreSQL.
 
 ## Features Implemented
 
